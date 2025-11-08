@@ -1,5 +1,6 @@
 import { handleSuccess, handleErrorClient, handleErrorServer } from "../Handlers/responseHandlers.js";
 import { updateUserById, deleteUserById } from "../services/user.service.js";
+import { validateUserUpdate, buildValidationErrorResponse } from "../validations/usuario.validation.js";
 
 export function getPublicProfile(req, res) {
   handleSuccess(res, 200, "Perfil público obtenido exitosamente", {
@@ -19,19 +20,15 @@ export function getPrivateProfile(req, res) {
 export async function updatePrivateProfile(req, res) {
   try {
     const userId = req.user?.sub;
-    const changes = req.body;
-
     if (!userId) return handleErrorClient(res, 401, "No autenticado");
-    if (!changes || Object.keys(changes).length === 0) {
-      return handleErrorClient(res, 400, "Datos para actualizar son requeridos");
+
+    // Validar con Joi
+    const { valid, errors, value } = validateUserUpdate(req.body);
+    if (!valid) {
+      return buildValidationErrorResponse(res, errors, 400);
     }
 
-    // Solo permitir email y password
-    const allowed = {};
-    if (typeof changes.email !== "undefined") allowed.email = changes.email;
-    if (typeof changes.password !== "undefined") allowed.password = changes.password;
-
-    const updated = await updateUserById(userId, allowed);
+    const updated = await updateUserById(userId, value);
     handleSuccess(res, 200, "Perfil actualizado exitosamente", updated);
   } catch (error) {
     if (error.code === '23505') {

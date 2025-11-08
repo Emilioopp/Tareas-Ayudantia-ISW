@@ -1,3 +1,0 @@
-Nombre: Emilio Alarcón Gómez
-Carrera: Ingeniería Civil Informática
-Expectativa: Aprender a usar React
